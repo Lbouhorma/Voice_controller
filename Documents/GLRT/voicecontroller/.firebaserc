@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "voicecontroller-6bdf5"
+    "default": "voice-controller-57710",
+    "staging2": "voice-controller-57710"
   }
 }
