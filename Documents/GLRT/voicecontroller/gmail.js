@@ -212,11 +212,18 @@ function sendMessage(auth){
       resource: {
         raw: base64EncodedEmail
       }
+    }, function(err, response){
+      if (err) {
+        console.log('The API returned an error: ' + err);
+        return;
+      }
+      else
+      aff(response)
     })
-    request.execute(aff);
+    //request.execute(aff);
     //console.log(request)
   }
 
-  function aff() { 
-        console.log('sending complete')
+  function aff(response) { 
+        console.log('sending complete, response:', response)
   }
