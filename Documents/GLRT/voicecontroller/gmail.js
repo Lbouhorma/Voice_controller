@@ -2,13 +2,15 @@ var fs = require('fs');
 var readline = require('readline');
 var {google} = require('googleapis');
 const base64url = require('base64url');
+const Base64= require('js-base64').Base64
 // If modifying these scopes, delete your previously saved credentials
 // at TOKEN_DIR/gmail-nodejs.json
-var SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
+var SCOPES = [ 'https://mail.google.com/'];
 // Change token directory to your system preference
 var TOKEN_DIR =(process.env.HOME || process.env.HOMEPATH ||
    process.env.USERPROFILE) + '/.credentials/';
 var TOKEN_PATH = TOKEN_DIR + 'gmail-nodejs.json';
+console.log(TOKEN_DIR, TOKEN_PATH)
 var gmail = google.gmail('v1');
 // Load client secrets from a local file.
 fs.readFile('client_secret.json', function processClientSecrets(err, content) {
@@ -18,8 +20,8 @@ fs.readFile('client_secret.json', function processClientSecrets(err, content) {
  }
  // Authorize a client with the loaded credentials, then call the
  // Gmail API.
- //authorize(JSON.parse(content),getRecentEmail);
- authorize(JSON.parse(content),  sendMessage)
+//  authorize(JSON.parse(content),getRecentEmail);
+  authorize(JSON.parse(content),  sendMessage)
 });
 /**
 * Create an OAuth2 client with the given credentials, and then execute the
@@ -200,30 +202,22 @@ function listLabels(auth) {
       return encodedMail;
 }
 
-function sendMessage(auth){
-    // Using the js-base64 library for encoding:
-    // https://www.npmjs.com/package/js-base64
-    const base64EncodedEmail = makeBody('me', 'lbouhorma@gmail.com', 'test subject', 'test message')
-   // console.log(google)
-   console.log(gmail.users.messages)
-    const request = gmail.users.messages.send({
-      auth: auth,
-      userId: 'me',
-      resource: {
-        raw: base64EncodedEmail
-      }
-    }, function(err, response){
-      if (err) {
-        console.log('The API returned an error: ' + err);
-        return;
-      }
-      else
-      aff(response)
-    })
-    //request.execute(aff);
-    //console.log(request)
-  }
 
-  function aff(response) { 
-        console.log('sending complete, response:', response)
-  }
+function sendMessage(auth) {
+
+  let email = {message: `To: "first last" <chapotot.guillaume@gmail.com>\r\nContent-type: 
+  text/html;charset=iso-8859-1\r\nMIME-Version: 1.0\r\nSubject: this would be the 
+  subject\r\n\r\nThis is the email sent by Stanley Toles`}
+
+  let base64EncodedEmail = Base64.encodeURI(email.message);
+  gmail.users.messages.send({'auth': auth, 'userId': 'me',  'resource': {
+  'raw': base64EncodedEmail,
+
+
+  }},function(err,response){
+
+  if(err) throw err;
+
+  console.log(response);
+ });
+}
