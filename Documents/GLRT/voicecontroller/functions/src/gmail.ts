@@ -1,18 +1,19 @@
-var fs = require('fs');
-var readline = require('readline');
-var {google} = require('googleapis');
+const fs = require('fs');
+const readline = require('readline');
+const {google} = require('googleapis');
 const base64url = require('base64url');
 const Base64= require('js-base64').Base64
-// If modifying these scopes, delete your previously saved credentials
+// If modifying these scopes, deconste your previously saved credentials
 // at TOKEN_DIR/gmail-nodejs.json
-var SCOPES = [ 'https://mail.google.com/'];
+const SCOPES = [ 'https://mail.google.com/'];
 // Change token directory to your system preference
-var TOKEN_DIR =(process.env.HOME || process.env.HOMEPATH ||
+const TOKEN_DIR =(process.env.HOME || process.env.HOMEPATH ||
    process.env.USERPROFILE) + '/.credentials/';
-var TOKEN_PATH = TOKEN_DIR + 'gmail-nodejs.json';
+const TOKEN_PATH = TOKEN_DIR + 'gmail-nodejs.json';
 console.log(TOKEN_DIR, TOKEN_PATH)
-var gmail = google.gmail('v1');
+const gmail = google.gmail('v1');
 // Load client secrets from a local file.
+export default function executeCommand(){
 fs.readFile('client_secret.json', function processClientSecrets(err, content) {
  if (err) {
    console.log('Error loading client secret file: ' + err);
@@ -23,6 +24,9 @@ fs.readFile('client_secret.json', function processClientSecrets(err, content) {
 //  authorize(JSON.parse(content),getRecentEmail);
   authorize(JSON.parse(content),  sendMessage)
 });
+}
+
+executeCommand();
 /**
 * Create an OAuth2 client with the given credentials, and then execute the
 * given callback function.
@@ -31,11 +35,11 @@ fs.readFile('client_secret.json', function processClientSecrets(err, content) {
 * @param {function} callback The callback to call with the authorized client.
 */
 function authorize(credentials, callback) {
-   var clientSecret = credentials.installed.client_secret;
-   var clientId = credentials.installed.client_id;
-   var redirectUrl = credentials.installed.redirect_uris[0];
-   var OAuth2 = google.auth.OAuth2;
-   var oauth2Client = new OAuth2(clientId, clientSecret,  redirectUrl);
+   const clientSecret = credentials.installed.client_secret;
+   const clientId = credentials.installed.client_id;
+   const redirectUrl = credentials.installed.redirect_uris[0];
+   const OAuth2 = google.auth.OAuth2;
+   const oauth2Client = new OAuth2(clientId, clientSecret,  redirectUrl);
    // Check if we have previously stored a token.
    fs.readFile(TOKEN_PATH, function(err, token) {
      if (err) {
@@ -55,9 +59,9 @@ function authorize(credentials, callback) {
 *     client.
 */
 function getNewToken(oauth2Client, callback) {
- var authUrl = oauth2Client.generateAuthUrl({access_type: 'offline', scope: SCOPES});
+ const authUrl = oauth2Client.generateAuthUrl({access_type: 'offline', scope: SCOPES});
  console.log('Authorize this app by visiting this url: ', authUrl);
- var rl = readline.createInterface({
+ const rl = readline.createInterface({
    input: process.stdin,
    output: process.stdout
  });
@@ -108,25 +112,25 @@ function getRecentEmail(auth) {
        }
      // Get the message id which we will need to retreive tha actual message next.
       
-     //var message_id = response['data']['messages'][0]['id'];
+     //const message_id = response['data']['messages'][0]['id'];
     
      console.log("message_id of all messages: ");
    
-     for (k = 0; k < response.data.resultSizeEstimate; k++) {
+     for (let k = 0; k < response.data.resultSizeEstimate; k++) {
            console.log(response['data']['messages'][k]['id']);
-           var message_id = response['data']['messages'][k]['id'];
-           var num_msg=0;
+           const message_id = response['data']['messages'][k]['id'];
+           let num_msg=0;
            gmail.users.messages.get({auth: auth, userId: 'me','id': message_id}, function(err, response) {
            console.log("             ");
            console.log("             ");
            console.log("--------------------------------------");
-           contact_json = response['data'].payload.headers.find( el => el.name === 'From');
+           const contact_json = response['data'].payload.headers.find( el => el.name === 'From');
            console.log("Contact: " + contact_json.value);
            console.log("             ");
-           date_json = response['data'].payload.headers.find( el => el.name === 'Date');
+           const date_json = response['data'].payload.headers.find( el => el.name === 'Date');
            console.log("Date: " + date_json.value);
            console.log("             ");
-           subject_json = response['data'].payload.headers.find( el => el.name === 'Subject');
+           const subject_json = response['data'].payload.headers.find( el => el.name === 'Subject');
            console.log("Subject: " + subject_json.value);
            console.log("             ");
            console.log("Message number "+num_msg+"        ");
@@ -149,9 +153,9 @@ function getRecentEmail(auth) {
 
 }
 const store_id=(f,param)=>{
- result=[];
+ const result=[];
  //new Array(param.length);
- for (var el in param){
+ for (const el in param){
      console.log(param[el]);
      result.push(f(param[el]));
  }
@@ -175,13 +179,13 @@ function listLabels(auth) {
      console.log('The API returned an error: ' + err);
      return;
    }
-   var labels = response.data.labels;
+   const labels = response.data.labels;
    if (labels.length == 0) {
      console.log('No labels found.');
    } else {
      console.log('Labels:');
-     for (var i = 0; i < labels.length; i++) {
-       var label = labels[i];
+     for (let i = 0; i < labels.length; i++) {
+       const label = labels[i];
        console.log('%s', label.name);
      }
    }
@@ -189,14 +193,14 @@ function listLabels(auth) {
  }
  function makeBody(to, subject, message) {
 
-  let email = 'To: "first last" <' 
+  const email = 'To: "first last" <' 
                + to + 
                '>\r\nContent-type: text/html;charset=iso-8859-1\r\nMIME-Version: 1.0\r\nSubject: ' 
                + subject + 
                '\r\n\r\n' 
                + message;
  
- let encodedMail = Base64.encodeURI(email);
+ const encodedMail = Base64.encodeURI(email);
  return encodedMail;
 }
 
@@ -204,11 +208,11 @@ function listLabels(auth) {
 function sendMessage(auth) {
 
   /* Example of data */
-  let to = 'lbouhorma@gmail.com';
-  let subject = 'Test Voice Controller 3';
-  let message = 'Ceci est un test.';
+  const to = 'lbouhorma@gmail.com';
+  const subject = 'Test Voice Controller 3';
+  const message = 'Ceci est un test.';
 
- let encodedMail = makeBody(to, subject, message);
+ const encodedMail = makeBody(to, subject, message);
  gmail.users.messages.send({'auth': auth, 'userId': 'me',  'resource': {
  'raw': encodedMail,
 
@@ -220,3 +224,5 @@ function sendMessage(auth) {
  console.log(response);
 });
 }
+
+// export= executeCommand();
