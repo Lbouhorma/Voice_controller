@@ -187,37 +187,36 @@ function listLabels(auth) {
    }
  });
  }
+ function makeBody(to, subject, message) {
 
- function makeBody(to, from, subject, message) {
-  const str = ["Content-Type: text/plain; charset=\"UTF-8\"\n",
-      "MIME-Version: 1.0\n",
-      "Content-Transfer-Encoding: 7bit\n",
-      "to: ", to, "\n",
-      "from: ", from, "\n",
-      "subject: ", subject, "\n\n",
-      message
-  ].join('');
-
-  const encodedMail = new Buffer(str).toString("base64").replace(/\+/g, '-').replace(/\//g, '_');
-      return encodedMail;
+  let email = 'To: "first last" <' 
+               + to + 
+               '>\r\nContent-type: text/html;charset=iso-8859-1\r\nMIME-Version: 1.0\r\nSubject: ' 
+               + subject + 
+               '\r\n\r\n' 
+               + message;
+ 
+ let encodedMail = Base64.encodeURI(email);
+ return encodedMail;
 }
 
 
 function sendMessage(auth) {
 
-  let email = {message: `To: "first last" <chapotot.guillaume@gmail.com>\r\nContent-type: 
-  text/html;charset=iso-8859-1\r\nMIME-Version: 1.0\r\nSubject: this would be the 
-  subject\r\n\r\nThis is the email sent by Stanley Toles`}
+  /* Example of data */
+  let to = 'lbouhorma@gmail.com';
+  let subject = 'Test Voice Controller 3';
+  let message = 'Ceci est un test.';
 
-  let base64EncodedEmail = Base64.encodeURI(email.message);
-  gmail.users.messages.send({'auth': auth, 'userId': 'me',  'resource': {
-  'raw': base64EncodedEmail,
+ let encodedMail = makeBody(to, subject, message);
+ gmail.users.messages.send({'auth': auth, 'userId': 'me',  'resource': {
+ 'raw': encodedMail,
 
 
-  }},function(err,response){
+ }},function(err,response){
 
-  if(err) throw err;
+ if(err) throw err;
 
-  console.log(response);
- });
+ console.log(response);
+});
 }
