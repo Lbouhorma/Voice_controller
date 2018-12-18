@@ -205,7 +205,26 @@ function listLabels(auth) {
 }
 
 
-function sendMessage(auth) {
+function sendMessage(auth):void {
+
+  /* Example of data */
+  const to = 'lbouhorma@gmail.com';
+  const subject = 'Test Voice Controller 3';
+  const message = 'Ceci est un test.';
+
+ const encodedMail = makeBody(to, subject, message);
+ gmail.users.messages.send({'auth': auth, 'userId': 'me',  'resource': {
+ 'raw': encodedMail,
+
+
+ }},function(err,response){
+
+ if(err) throw err;
+
+ console.log(response);
+});
+}
+module.exports = function sendMessage(auth):void {
 
   /* Example of data */
   const to = 'lbouhorma@gmail.com';
