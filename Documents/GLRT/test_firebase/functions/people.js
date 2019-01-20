@@ -3,13 +3,13 @@ const readline = require('readline');
 const {google} = require('googleapis');
 
 // If modifying these scopes, delete token.json.
-const SCOPES = ['https://www.googleapis.com/auth/contacts.readonly'];
+const SCOPES = ['https://www.googleapis.com/auth/contacts'];
 
 const TOKEN_PATH = 'token.json';
 
 const content ={"installed":{"client_id":"586480029881-4a5khp4t8iobeo9gnpejp6lfviutjqv2.apps.googleusercontent.com","project_id":"voice-controller-57710","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://www.googleapis.com/oauth2/v3/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_secret":"z8UsiOmo7GKZux6sSangzEmS","redirect_uris":["urn:ietf:wg:oauth:2.0:oob","http://localhost"]}};
 
-// authorize(content, listConnectionNames);
+authorize(content, createContact);
 
 
 /**
@@ -26,9 +26,9 @@ function authorize(credentials, callback) {
   // Check if we have previously stored a token.
   fs.readFile(TOKEN_PATH, (err, token) => {
     // console.log(token);
-    if (err) {
+     if (err) {
       // console.log("getting new token");
-      return getNewToken(oAuth2Client, callback);}
+      return getNewToken(oAuth2Client, callback);}//}
     oAuth2Client.setCredentials(JSON.parse(token));
     console.log(oAuth2Client.credentials);
    console.log("cb:",  callback(oAuth2Client));
@@ -118,3 +118,45 @@ function getEmail(peopleList){
   console.log("contact found", email);
   return email;
 }
+
+const person = {
+  "names": [
+    {
+      "givenName": "Test",
+      "familyName": "Testing"
+    }
+  ],
+  "emailAddresses": [
+    {
+      "value": "test@test.com"
+    }
+  ]
+ }
+
+
+
+function createContact(auth){
+  const service = google.people({version: 'v1', auth});
+  service.people.createContact({
+    parent: 'me',
+    resource: {
+      names: [
+        {
+          givenName: "Test",
+          familyName: "Testing"
+        }
+      ],
+      emailAddresses: [
+        {
+          value: "test@test.com"
+        }
+      ]
+    }
+  }, (err, res) => {
+    if (err) return console.error('The API returned an error: ' + err);
+    // console.log(res);
+  })
+
+}
+
+
