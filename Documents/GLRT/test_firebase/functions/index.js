@@ -1,3 +1,4 @@
+
 const functions = require('firebase-functions');
 const { dialogflow } = require('actions-on-google');
 var google = require('googleapis').google;
@@ -29,12 +30,14 @@ function authorize(credentials, callback, params, scopeCredentials) {
     
 
 
-function getEmail(peopleList){
-    const name = "Corentin Barrial"; // emailParams[0] + emailParams[1];
+function getEmail(peopleList, emailParams){
+     var name = emailParams[0] +" "+ emailParams[1];
+     console.log("name",name);
     // console.log("list on get:",peopleList);
     //  console.log("params on get: ", emailParams);
-    var email = "lbouhorma@gmail.com";
+    var email;//= "lbouhorma@gmail.com";
     peopleList.forEach(person => {
+        console.log(person);
         if (person.name === name){
             email = person.email; 
         }  
@@ -51,7 +54,7 @@ function listConnectionNames(auth, emailParams) {
     const service = google.people({version: 'v1', auth});
     service.people.connections.list({
       resourceName: 'people/me',
-      pageSize: 410,
+      pageSize: 411,
       personFields: 'names,emailAddresses',
     }, (err, res) => {
       if (err) return console.error('The API returned an error: ' + err);
@@ -62,7 +65,7 @@ function listConnectionNames(auth, emailParams) {
                 peopleList.push({name: person.names[0].displayName,  email: person.emailAddresses[0].value })
             }
         });
-        var email = getEmail(peopleList);
+        var email = getEmail(peopleList, emailParams);
         emailParams.push(email);
         authorize(secret, sendMessage, emailParams, gmailCredentials);
       } else {
@@ -103,12 +106,12 @@ function sendMessage(auth, params) {
 app.intent('SendEmail - Name',(conv,params)=> {
         const givenName=params['given-name'];
         const lastName=params['last-name'];
-        if (givenName ==='Jean' && lastName ==='Dupont'){
+        // if (givenName ==='Jean' && lastName ==='Dupont'){
             conv.ask('Do you want to send an email to '+givenName+' '+lastName +'?');
-        }
-        else{
-            conv.ask(givenName+' '+lastName+' is not in your contact list. Please say Add a new contact');
-        }
+        // }
+        // else{
+            // conv.ask(givenName+' '+lastName+' is not in your contact list. Please say Add a new contact');
+        // }
         
     });
     
