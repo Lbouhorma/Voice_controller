@@ -15,9 +15,27 @@ expiry_date: 1548006165017 };
 const gmailCredentials=  {"access_token":"ya29.GltoBqJ-QesOaSJoxHQt8C3rbP6EQrxiRMiJgGiG-qpxMI1UI2vSEjaRDJX6lqy1ADsE6VR82M8BFh3cwfpJBMxB1R68OQ-9v2FJOkB7M7TRNs_r9SweKs_WjSZg","refresh_token":"1/XGhBeRzaCD5urhLnbSwef9Nl_9FQzyeuuX4oSu9YRWc","scope":"https://mail.google.com/","token_type":"Bearer","expiry_date":1543939550745};
 const app = dialogflow()
 
+// List of Contact & Email Parameters for sendMessage and createContact
+
 var peopleList = [];
+
+/**
+ * emailParams[0] = given-name
+ * emailParams[1] = last-name
+ * emailParams[2] = email
+ * emailParams[3] = subject
+ * emailParams[4] = content
+ */
 var emailParams = ["", "", "", "", ""];
 
+/**
+ * Authorize()
+ * 
+ * @param
+ * - credentials
+ * - callback
+ * - scopeCredentials
+ */
 function authorize(credentials, callback, scopeCredentials) {
     var clientSecret = credentials.installed.client_secret;
     var clientId = credentials.installed.client_id;
@@ -33,9 +51,11 @@ function authorize(credentials, callback, scopeCredentials) {
 }
     
 /**
+ * listConnectionNames
+ * 
  * Print the display name if available for 10 connections.
  *
- * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
+ * @param {google.auth.OAuth2} auth An authorized OAuth2 client
  */
 function listConnectionNames(auth) {
     const service = google.people({version: 'v1', auth});
@@ -52,6 +72,7 @@ function listConnectionNames(auth) {
                 peopleList.push({name: person.names[0].displayName,  email: person.emailAddresses[0].value })
             }
         });
+
         var email = getEmail(peopleList);
         emailParams[2] = email;
         
@@ -62,10 +83,16 @@ function listConnectionNames(auth) {
     });
 }
 
+/**
+ * getEmail()
+ * 
+ * @param peopleList List of contact
+ */
 function getEmail(peopleList){
-     var name = emailParams[0] +" "+ emailParams[1];
-     console.log("name",name);
+    var name = emailParams[0] +" "+ emailParams[1];
+    console.log("name",name);
     var email="undefined";
+
     peopleList.forEach(person => {
         if (person.name === name){
             email = person.email; 
@@ -75,23 +102,34 @@ function getEmail(peopleList){
     return email;
 }
 
-
+/**
+ * getEmail()
+ * 
+ * @param auth An authorized OAuth2 client
+ */
 function sendMessage(auth) {
-    
-        var to =emailParams[2];
-        var subject = emailParams[3];
-        var message = emailParams[4]; 
-        var encodedMail = makeBody(to, subject, message);
+    var to =emailParams[2];
+    var subject = emailParams[3];
+    var message = emailParams[4]; 
+    var encodedMail = makeBody(to, subject, message);
         
-        gmail.users.messages.send({ 'auth': auth, 'userId': 'me', 'resource': {
-                'raw': encodedMail
-            } }, (err, response) =>{
+    gmail.users.messages.send({ 'auth': auth, 'userId': 'me', 'resource': {
+        'raw': encodedMail
+        } }, (err, response) =>{
             if (err)
                 throw err;
         console.log(response.status);
-        });
+    });
 }
 
+/**
+ * makeBody()
+ * 
+ * @param
+ * - to: Receiver
+ * - subject
+ * - message: Content of the mail 
+ */
 function makeBody(to, subject, message) {
     var email = 'To: "first last" <'
         + to +
@@ -104,6 +142,11 @@ function makeBody(to, subject, message) {
     return encodedMail;
 }
 
+/**
+ * asynCall()
+ * 
+ * asynchronous Call to the authorize() function
+ */
 function asyncCall(){
     return new Promise(resolve => {
         authorize(secret, listConnectionNames, peopleCredentials).then(()=>{
@@ -113,27 +156,11 @@ function asyncCall(){
     })
 }
 
-app.intent('SendEmail - Name', (conv,params) => {
-    const givenName=params['given-name'];
-    const lastName=params['last-name'];
-    emailParams[0] = givenName;
-    emailParams[1] = lastName;
-    
-    asyncCall().then(()=> {
-        console.log("async call email", emailParams);
-        if (emailParams[2]==="undefined") {
-            console.log("Contact not found.");
-            conv.ask( emailParams[0] + ' ' + emailParams[1] +' is not on your contact list. Please say Add a new contact.');
-        }
-        else {
-            console.log("Contact found.");
-            conv.ask('Do you want to send an email to '+emailParams[0]+' '+emailParams[1] +'?');
-        }
-    })
-        
-});
-
-
+/**
+ * createContact()
+ * 
+ * @param auth An authorized OAuth2 client
+ */
 function createContact(auth){
     const service = google.people({version: 'v1', auth});
     service.people.createContact({
@@ -156,23 +183,40 @@ function createContact(auth){
           console.log(res);
         })
 }
-      
 
+//////////   DIALOGFLOW INTENTS  //////////
+
+app.intent('SendEmail - Name', (conv,params) => {
+    emailParams[0] = params['given-name'];
+    emailParams[1] = params['last-name'];
     
+    asyncCall().then(()=> {
+        console.log("Async call email", emailParams);
+        if (emailParams[2]==="undefined") {
+            console.log("Contact not found.");
+            conv.ask( emailParams[0] + ' ' + emailParams[1] +' is not on your contact list. Please say Add a new contact.');
+        }
+        else {
+            console.log("Contact found.");
+            conv.ask('Do you want to send an email to '+emailParams[0]+' '+emailParams[1] +'?');
+        }
+    })
+        
+});
+
+
 app.intent('Add contact - Mail - yes',(conv,params)=> {
-        emailParams[0] = params['given-name'];
-        emailParams[1] = params['last-name'];
-        emailParams[2] = params['email'];
-        authorize(secret, createContact, peopleCredentials);
-        conv.ask(emailParams[0]+' '+emailParams[1]+' with adress '+emailParams[2]+' added to contact! To send a mail say "new email", to go to the menu say "menu"');
+    emailParams[0] = params['given-name'];
+    emailParams[1] = params['last-name'];
+    emailParams[2] = params['email'];
+
+    authorize(secret, createContact, peopleCredentials);
+    conv.ask(emailParams[0]+' '+emailParams[1]+' with adress '+emailParams[2]+' added to contact! To send a mail say "new email", to go to the menu say "menu"');
 })
 
 app.intent("SendEmail - Content - yes", (conv,params) => {
- 
-    const subject=params['subject'];
-    const content=params['content'];
-    emailParams[3] = subject;
-    emailParams[4] = content;
+    emailParams[3] = params['subject'];;
+    emailParams[4] = params['content'];
     
     authorize(secret, sendMessage, gmailCredentials);
     const response = 'Message sent to '+ emailParams[0] +' '+ emailParams[1];
