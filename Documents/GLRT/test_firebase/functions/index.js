@@ -12,12 +12,17 @@ scope: 'https://www.googleapis.com/auth/contacts',
 token_type: 'Bearer',
 expiry_date: 1548006165017 };
 
-const gmailCredentials=  {"access_token":"ya29.GltoBqJ-QesOaSJoxHQt8C3rbP6EQrxiRMiJgGiG-qpxMI1UI2vSEjaRDJX6lqy1ADsE6VR82M8BFh3cwfpJBMxB1R68OQ-9v2FJOkB7M7TRNs_r9SweKs_WjSZg","refresh_token":"1/XGhBeRzaCD5urhLnbSwef9Nl_9FQzyeuuX4oSu9YRWc","scope":"https://mail.google.com/","token_type":"Bearer","expiry_date":1543939550745};
+// const gmailCredentials=  {"access_token":"ya29.GltoBqJ-QesOaSJoxHQt8C3rbP6EQrxiRMiJgGiG-qpxMI1UI2vSEjaRDJX6lqy1ADsE6VR82M8BFh3cwfpJBMxB1R68OQ-9v2FJOkB7M7TRNs_r9SweKs_WjSZg","refresh_token":"1/XGhBeRzaCD5urhLnbSwef9Nl_9FQzyeuuX4oSu9YRWc","scope":"https://mail.google.com/","token_type":"Bearer","expiry_date":1543939550745};
+const gmailCredentials = {"access_token":"ya29.GluZBitSPYEvHsR25_MgmpXzEFRrmG_FuWCPkRFUSqwExrb1BjMLAwzRlgMtiaQ5je1qWBMxEXRlTQAFo0zJI7uTOU2cXNFPA_pold-W_RmGYNZhXKVF9HKQqyyH","refresh_token":"1/oS4N05SzcXg9AcOcbMu64iXiuva2-llZRVC_pxLy8eI","scope":"https://mail.google.com/","token_type":"Bearer","expiry_date":1548171254515};
+
 const app = dialogflow()
 
 // List of Contact & Email Parameters for sendMessage and createContact
 
 var peopleList = [];
+
+// Number of contacts on contact list
+var contactNumber = 423;
 
 /**
  * emailParams[0] = given-name
@@ -61,7 +66,7 @@ function listConnectionNames(auth) {
     const service = google.people({version: 'v1', auth});
     service.people.connections.list({
       resourceName: 'people/me',
-      pageSize: 411,
+      pageSize: contactNumber,
       personFields: 'names,emailAddresses',
     }, (err, res) => {
       if (err) return console.error('The API returned an error: ' + err);
@@ -72,9 +77,7 @@ function listConnectionNames(auth) {
                 peopleList.push({name: person.names[0].displayName,  email: person.emailAddresses[0].value })
             }
         });
-
-        var email = getEmail(peopleList);
-        emailParams[2] = email;
+        console.log("lst of contacts: ", peopleList);
         
       } else {
         console.log('No connections found.');
@@ -86,7 +89,7 @@ function listConnectionNames(auth) {
 /**
  * getEmail()
  * 
- * @param peopleList List of contact
+ * @param peopleList List of contacts
  */
 function getEmail(peopleList){
     var name = emailParams[0] +" "+ emailParams[1];
@@ -96,6 +99,7 @@ function getEmail(peopleList){
     peopleList.forEach(person => {
         if (person.name === name){
             email = person.email; 
+            return email;
         }  
     });
     console.log("email", email);
@@ -103,7 +107,7 @@ function getEmail(peopleList){
 }
 
 /**
- * getEmail()
+ * SendMessage()
  * 
  * @param auth An authorized OAuth2 client
  */
@@ -142,19 +146,6 @@ function makeBody(to, subject, message) {
     return encodedMail;
 }
 
-/**
- * asynCall()
- * 
- * asynchronous Call to the authorize() function
- */
-function asyncCall(){
-    return new Promise(resolve => {
-        authorize(secret, listConnectionNames, peopleCredentials).then(()=>{
-            console.log("authorize complete");
-            }); 
-        resolve();
-    })
-}
 
 /**
  * createContact()
@@ -184,14 +175,17 @@ function createContact(auth){
         })
 }
 
+
+//////////   UPLOAD CONTACT LIST    ////////
+authorize(secret, listConnectionNames, peopleCredentials);
 //////////   DIALOGFLOW INTENTS  //////////
 
 app.intent('SendEmail - Name', (conv,params) => {
     emailParams[0] = params['given-name'];
     emailParams[1] = params['last-name'];
-    
-    asyncCall().then(()=> {
-        console.log("Async call email", emailParams);
+    console.log("im on sendmail-name intent");
+    var email = getEmail(peopleList);
+    emailParams[2] = email;
         if (emailParams[2]==="undefined") {
             console.log("Contact not found.");
             conv.ask( emailParams[0] + ' ' + emailParams[1] +' is not on your contact list. Please say Add a new contact.');
@@ -200,9 +194,7 @@ app.intent('SendEmail - Name', (conv,params) => {
             console.log("Contact found.");
             conv.ask('Do you want to send an email to '+emailParams[0]+' '+emailParams[1] +'?');
         }
-    })
-        
-});
+    });
 
 
 app.intent('Add contact - Mail - yes',(conv,params)=> {
@@ -211,15 +203,18 @@ app.intent('Add contact - Mail - yes',(conv,params)=> {
     emailParams[2] = params['email'];
 
     authorize(secret, createContact, peopleCredentials);
+    contactNumber ++;
+    peopleList.push({name: emailParams[0] + " " + emailParams[1] ,  email: emailParams[2] })
+    console.log("contact number", contactNumber);
     conv.ask(emailParams[0]+' '+emailParams[1]+' with adress '+emailParams[2]+' added to contact! To send a mail say "new email", to go to the menu say "menu"');
 })
 
 app.intent("SendEmail - Content - yes", (conv,params) => {
-    emailParams[3] = params['subject'];;
+    emailParams[3] = params['subject'];
     emailParams[4] = params['content'];
     
     authorize(secret, sendMessage, gmailCredentials);
-    const response = 'Message sent to '+ emailParams[0] +' '+ emailParams[1];
+    const response = 'Message sent to '+ emailParams[0] +' '+ emailParams[1] + "To go back to the main menu please say Menu.";
     conv.ask(response);
     emailParams = ["", "", "", "", ""];
 });

@@ -115,9 +115,9 @@
     "promise/always-return": 1,
 
     //Enforces the use of catch() on un-returned promises
-    "promise/catch-or-return": 1,
+    "promise/catch-or-return": 0,
 
     // Warn against nested then() or catch() statements
-    "promise/no-nesting": 1
+    "promise/no-nesting": 0
   }
 }
